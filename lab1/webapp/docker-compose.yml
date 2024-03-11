@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: webservices
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+  webapp:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: webapp
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
