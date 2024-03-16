@@ -2,6 +2,9 @@ package ifmo.webservices.lab3;
 
 import ifmo.webservices.lab3.exceptions.*;
 
+import javax.activation.DataHandler;
+import javax.mail.util.ByteArrayDataSource;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -29,6 +32,45 @@ public class ProductDAO {
 
     public boolean removeProduct(long id) throws ProductRemoveException, DatabaseException {
         return executeDeleteQuery(id);
+    }
+
+    public void upload(String fileName, DataHandler data) throws ProductCreationException {
+        try (Connection conn = PostgresConnection.getConnection()) {
+            String INSERT_QUERY = "INSERT INTO FILE (name, data) VALUES (?, ?)";
+            PreparedStatement preparedStatement = conn.prepareStatement(INSERT_QUERY);
+            preparedStatement.setString(1, fileName);
+            preparedStatement.setBytes(2, data.getInputStream().readAllBytes());
+            int updatedRows = preparedStatement.executeUpdate();
+            if (updatedRows == 0) {
+                throw new ProductCreationException(ExceptionMessageConstants.PRODUCT_CREATION_MESSAGE, ProductServiceFault.defaultInstance());
+            }
+        } catch (IOException | SQLException ex) {
+            throw new ProductCreationException(ExceptionMessageConstants.PRODUCT_CREATION_MESSAGE, ProductServiceFault.defaultInstance());
+        }
+    }
+
+    public DataHandler download(String fileName) throws DatabaseException, ServiceException {
+        try (Connection conn = PostgresConnection.getConnection()) {
+            String SELECT_QUERY = "SELECT (name, data) FROM FILE WHERE name = ?";
+            PreparedStatement preparedStatement = conn.prepareStatement(SELECT_QUERY);
+            preparedStatement.setString(1, fileName);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            try {
+                if (resultSet.next()) {
+                    String name = resultSet.getString("name");
+                    byte[] data = resultSet.getBytes("data");
+                    ByteArrayDataSource rawData = new ByteArrayDataSource(data, "text/plain");
+                    return new DataHandler(rawData);
+                } else {
+                    throw new ServiceException("File not found", ProductServiceFault.defaultInstance());
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(ProductDAO.class.getName()).log(Level.SEVERE, null, ex);
+                throw new DatabaseException(ExceptionMessageConstants.DATABASE_ACCESS_MESSAGE, ProductServiceFault.defaultInstance(), ex);
+            }
+        } catch (SQLException ex) {
+            throw new DatabaseException(ExceptionMessageConstants.DATABASE_ACCESS_MESSAGE, ProductServiceFault.defaultInstance(), ex);
+        }
     }
 
     private String convertArgsToWhereClause(final Map<String, String> args) {

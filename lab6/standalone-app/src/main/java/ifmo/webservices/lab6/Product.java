@@ -15,7 +15,6 @@ public class Product {
     private Category category;
     private long quantity;
     private long cost;
-
     public Product(long id, long code, String name, Category category, long quantity, long cost) {
         this.id = id;
         this.code = code;

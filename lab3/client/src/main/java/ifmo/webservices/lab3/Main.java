@@ -2,17 +2,29 @@ package ifmo.webservices.lab3;
 
 import ifmo.webservices.lab3.generated.*;
 
+import javax.xml.ws.BindingProvider;
+import java.net.Authenticator;
 import java.net.MalformedURLException;
+import java.net.PasswordAuthentication;
 import java.net.URL;
 import java.util.List;
 
 public class Main {
     public static void main(String[] args) throws MalformedURLException, DatabaseException, UnknownProductParameterException, ValueParsingException, MissingFieldsException, ProductCreationException, ProductUpdateException, ProductRemoveException {
         URL url = new URL("http://localhost:8080/ProductService?wsdl");
+
+        Authenticator.setDefault(new Authenticator() {
+            @Override
+            public PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication("username", "password".toCharArray());
+            }
+        });
+
         ProductService_Service productService = new ProductService_Service(url);
+        ProductService service = productService.getProductServicePort();
 
         System.out.println("All products: ");
-        List<Product> products = productService.getProductServicePort().getProducts(new GetProducts().getArg0());
+        List<Product> products = service.getProducts(new GetProducts().getArg0());
         for (Product product : products) {
             System.out.println("Product {" +
                     "id=" + product.getId() +

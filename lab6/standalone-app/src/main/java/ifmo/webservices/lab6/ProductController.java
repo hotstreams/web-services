@@ -3,8 +3,11 @@ package ifmo.webservices.lab6;
 import ifmo.webservices.lab6.exceptions.CreationRequestNotValidException;
 import ifmo.webservices.lab6.exceptions.UpdateRequestNotValidException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -44,4 +47,17 @@ public class ProductController {
         return ResponseEntity.ok(product);
     }
 
+    @PostMapping("/files")
+    public ResponseEntity<?> upload(@RequestParam("file") MultipartFile file) {
+        productService.uploadFile(file);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/files")
+    public ResponseEntity<Resource> upload(@RequestParam("name") String name) {
+        Resource file = productService.load(name);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"")
+                .body(file);
+    }
 }

@@ -7,6 +7,11 @@ CREATE TABLE PRODUCT (
     cost bigint NOT NULL
 );
 
+CREATE TABLE FILE (
+     name varchar(255) PRIMARY KEY,
+     data bytea
+);
+
 INSERT INTO PRODUCT (code, name, category, quantity, cost) VALUES (
     100,
     'Stove',
