@@ -8,35 +8,39 @@ import java.net.MalformedURLException;
 import java.net.PasswordAuthentication;
 import java.net.URL;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Main {
-    public static void main(String[] args) throws MalformedURLException, DatabaseException, UnknownProductParameterException, ValueParsingException, MissingFieldsException, ProductCreationException, ProductUpdateException, ProductRemoveException {
-        URL url = new URL("http://localhost:8080/ProductService?wsdl");
+    private static void getAllProducts() {
+        try {
+            URL url = new URL("http://localhost:8080/ProductService?wsdl");
+            ProductService_Service productService = new ProductService_Service(url);
+            ProductService service = productService.getProductServicePort();
 
-        Authenticator.setDefault(new Authenticator() {
-            @Override
-            public PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication("username", "password".toCharArray());
+            System.out.println("All products: ");
+            List<Product> products = service.getProducts(new GetProducts().getArg0());
+            for (Product product : products) {
+                System.out.println("Product {" +
+                        "id=" + product.getId() +
+                        ", code=" + product.getCode() +
+                        ", name='" + product.getName() + '\'' +
+                        ", category=" + product.getCategory() +
+                        ", quantity=" + product.getQuantity() +
+                        ", cost=" + product.getCost() +
+                        '}');
             }
-        });
-
-        ProductService_Service productService = new ProductService_Service(url);
-        ProductService service = productService.getProductServicePort();
-
-        System.out.println("All products: ");
-        List<Product> products = service.getProducts(new GetProducts().getArg0());
-        for (Product product : products) {
-            System.out.println("Product {" +
-                    "id=" + product.getId() +
-                    ", code=" + product.getCode() +
-                    ", name='" + product.getName() + '\'' +
-                    ", category=" + product.getCategory() +
-                    ", quantity=" + product.getQuantity() +
-                    ", cost=" + product.getCost() +
-                    '}');
+        } catch (Exception ex) {
+            System.err.println(ex);
         }
+    }
 
-        {
+    private static void getProductsByCategory() {
+        try {
+            URL url = new URL("http://localhost:8080/ProductService?wsdl");
+            ProductService_Service productService = new ProductService_Service(url);
+            ProductService service = productService.getProductServicePort();
+
             GetProducts.Arg0 arg = new GetProducts.Arg0();
 
             GetProducts.Arg0.Entry entry = new GetProducts.Arg0.Entry();
@@ -46,7 +50,7 @@ public class Main {
             arg.getEntry().add(entry);
 
             System.out.println("Products by category: ");
-            List<Product> productsByCategory = productService.getProductServicePort().getProducts(arg);
+            List<Product> productsByCategory = service.getProducts(arg);
             for (Product product : productsByCategory) {
                 System.out.println("Product {" +
                         "id=" + product.getId() +
@@ -57,9 +61,17 @@ public class Main {
                         ", cost=" + product.getCost() +
                         '}');
             }
+        } catch (Exception ex) {
+            System.err.println(ex);
         }
+    }
 
-        {
+    private static void getProductsByName() {
+        try {
+            URL url = new URL("http://localhost:8080/ProductService?wsdl");
+            ProductService_Service productService = new ProductService_Service(url);
+            ProductService service = productService.getProductServicePort();
+
             GetProducts.Arg0 arg = new GetProducts.Arg0();
 
             GetProducts.Arg0.Entry entry = new GetProducts.Arg0.Entry();
@@ -69,7 +81,7 @@ public class Main {
             arg.getEntry().add(entry);
 
             System.out.println("Products by name: ");
-            List<Product> productsByCategory = productService.getProductServicePort().getProducts(arg);
+            List<Product> productsByCategory = service.getProducts(arg);
             for (Product product : productsByCategory) {
                 System.out.println("Product {" +
                         "id=" + product.getId() +
@@ -80,9 +92,17 @@ public class Main {
                         ", cost=" + product.getCost() +
                         '}');
             }
+        } catch (Exception ex) {
+            System.err.println(ex);
         }
+    }
 
-        {
+    private static void getProductsByCode() {
+        try {
+            URL url = new URL("http://localhost:8080/ProductService?wsdl");
+            ProductService_Service productService = new ProductService_Service(url);
+            ProductService service = productService.getProductServicePort();
+
             GetProducts.Arg0 arg = new GetProducts.Arg0();
 
             GetProducts.Arg0.Entry entry = new GetProducts.Arg0.Entry();
@@ -92,7 +112,7 @@ public class Main {
             arg.getEntry().add(entry);
 
             System.out.println("Products by code: ");
-            List<Product> productsByCategory = productService.getProductServicePort().getProducts(arg);
+            List<Product> productsByCategory = service.getProducts(arg);
             for (Product product : productsByCategory) {
                 System.out.println("Product {" +
                         "id=" + product.getId() +
@@ -103,9 +123,17 @@ public class Main {
                         ", cost=" + product.getCost() +
                         '}');
             }
+        } catch (Exception ex) {
+            System.err.println(ex);
         }
+    }
 
-        {
+    private static void createProduct() {
+        try {
+            URL url = new URL("http://localhost:8080/ProductService?wsdl");
+            ProductService_Service productService = new ProductService_Service(url);
+            ProductService service = productService.getProductServicePort();
+
             CreateProduct.Arg0 arg = new CreateProduct.Arg0();
 
             CreateProduct.Arg0.Entry code = new CreateProduct.Arg0.Entry();
@@ -134,11 +162,96 @@ public class Main {
             arg.getEntry().add(quantity);
             arg.getEntry().add(cost);
 
-            long productId = productService.getProductServicePort().createProduct(arg);
+            long productId = service.createProduct(arg);
             System.out.println("Created product id = " + productId);
+        } catch (Exception ex) {
+            System.err.println(ex);
         }
+    }
 
-        {
+    private static void createProductWithException() {
+        try {
+            URL url = new URL("http://localhost:8080/ProductService?wsdl");
+            ProductService_Service productService = new ProductService_Service(url);
+            ProductService service = productService.getProductServicePort();
+
+            CreateProduct.Arg0 arg = new CreateProduct.Arg0();
+
+            CreateProduct.Arg0.Entry code = new CreateProduct.Arg0.Entry();
+            code.setKey("code");
+            code.setValue("101");
+
+            arg.getEntry().add(code);
+
+            try {
+                service.createProduct(arg);
+            } catch (MissingFieldsException | DatabaseException | ProductCreationException | ValueParsingException ex) {
+                System.err.println(ex);
+            }
+        } catch (Exception ex) {
+            System.err.println(ex);
+        }
+    }
+
+    private static void updateProductWithException() {
+        try {
+            URL url = new URL("http://localhost:8080/ProductService?wsdl");
+            ProductService_Service productService = new ProductService_Service(url);
+            ProductService service = productService.getProductServicePort();
+
+            UpdateProduct.Arg1 arg = new UpdateProduct.Arg1();
+
+            UpdateProduct.Arg1.Entry cost = new UpdateProduct.Arg1.Entry();
+            cost.setKey("cost");
+            cost.setValue("test");
+
+            arg.getEntry().add(cost);
+
+            try {
+                service.updateProduct(1, arg);
+            } catch (ValueParsingException | DatabaseException | MissingFieldsException | ProductUpdateException |
+                     UnknownProductParameterException ex) {
+                System.err.println(ex);
+            }
+        } catch (Exception ex) {
+            System.err.println(ex);
+        }
+    }
+
+    private static void removeProductWithException() {
+        try {
+            URL url = new URL("http://localhost:8080/ProductService?wsdl");
+            ProductService_Service productService = new ProductService_Service(url);
+            ProductService service = productService.getProductServicePort();
+
+            try {
+                productService.getProductServicePort().removeProduct(9999);
+            } catch (ProductRemoveException | DatabaseException ex) {
+                System.err.println(ex);
+            }
+        } catch (Exception ex) {
+            System.err.println(ex);
+        }
+    }
+
+    private static void task() {
+        getAllProducts();
+        getProductsByCategory();
+        getProductsByName();
+        getProductsByCode();
+        createProduct();
+        updateProduct();
+        createProductWithException();
+        updateProductWithException();
+        removeProductWithException();
+    }
+
+    static void updateProduct() {
+        try {
+            URL url = new URL("http://localhost:8080/ProductService?wsdl");
+            ProductService_Service productService = new ProductService_Service(url);
+            ProductService service = productService.getProductServicePort();
+
             UpdateProduct.Arg1 arg = new UpdateProduct.Arg1();
 
             UpdateProduct.Arg1.Entry cost = new UpdateProduct.Arg1.Entry();
@@ -147,7 +260,7 @@ public class Main {
 
             arg.getEntry().add(cost);
 
-            boolean status = productService.getProductServicePort().updateProduct(3, arg);
+            boolean status = service.updateProduct(3, arg);
             System.out.println("Update product status = " + status);
 
             GetProducts.Arg0 byIdArg = new GetProducts.Arg0();
@@ -158,7 +271,7 @@ public class Main {
 
             byIdArg.getEntry().add(id);
 
-            List<Product> productsList = productService.getProductServicePort().getProducts(byIdArg);
+            List<Product> productsList = service.getProducts(byIdArg);
             for (Product product : productsList) {
                 System.out.println("Product {" +
                         "id=" + product.getId() +
@@ -169,64 +282,27 @@ public class Main {
                         ", cost=" + product.getCost() +
                         '}');
             }
+        } catch (Exception ex) {
+            System.err.println(ex);
         }
+    }
 
-//        {
-//            boolean status = productService.getProductServicePort().removeProduct(1);
-//            System.out.println("Remove product status = " + status);
-//
-//            System.out.println("All products:");
-//            List<Product> productsList = productService.getProductServicePort().getProducts(new GetProducts().getArg0());
-//            for (Product product : productsList) {
-//                System.out.println("Product {" +
-//                        "id=" + product.getId() +
-//                        ", code=" + product.getCode() +
-//                        ", name='" + product.getName() + '\'' +
-//                        ", category=" + product.getCategory() +
-//                        ", quantity=" + product.getQuantity() +
-//                        ", cost=" + product.getCost() +
-//                        '}');
-//            }
-//        }
+    private static void executeTasks() {
+        ExecutorService service = Executors.newFixedThreadPool(3);
+        for (int i = 0; i < 5; i++) {
+            service.submit(Main::task);
+        }
+        service.shutdown();
+    }
 
-        {
-            CreateProduct.Arg0 arg = new CreateProduct.Arg0();
-
-            CreateProduct.Arg0.Entry code = new CreateProduct.Arg0.Entry();
-            code.setKey("code");
-            code.setValue("101");
-
-            arg.getEntry().add(code);
-
-            try {
-                productService.getProductServicePort().createProduct(arg);
-            } catch (MissingFieldsException ex) {
-                System.err.println(ex);
+    public static void main(String[] args) {
+        Authenticator.setDefault(new Authenticator() {
+            @Override
+            public PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication("username", "password".toCharArray());
             }
-        }
+        });
 
-        {
-            UpdateProduct.Arg1 arg = new UpdateProduct.Arg1();
-
-            UpdateProduct.Arg1.Entry cost = new UpdateProduct.Arg1.Entry();
-            cost.setKey("cost");
-            cost.setValue("test");
-
-            arg.getEntry().add(cost);
-
-            try {
-                productService.getProductServicePort().updateProduct(1, arg);
-            } catch (ValueParsingException ex) {
-                System.err.println(ex);
-            }
-        }
-
-        {
-            try {
-                productService.getProductServicePort().removeProduct(9999);
-            } catch (ProductRemoveException ex) {
-                System.err.println(ex);
-            }
-        }
+        executeTasks();
     }
 }

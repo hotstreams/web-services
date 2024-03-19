@@ -17,11 +17,7 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
 @SpringBootApplication
 public class Main implements CommandLineRunner {
@@ -116,24 +112,41 @@ public class Main implements CommandLineRunner {
     }
 
     @Override
-    public void run(String... args) throws Exception {
-        ExecutorService service = Executors.newFixedThreadPool(3);
+    public void run(String... args) throws ExecutionException, InterruptedException {
+        CompletableFuture<Void> post = CompletableFuture
+                .supplyAsync(this::postRequest)
+                .handle((p, ex) -> {
+                    if (ex != null) {
+                        System.err.println(ex);
+                    } else {
+                        System.out.println(p);
+                    }
+                    return null;
+                });
 
-        List<Future<?>> futures = new ArrayList<>();
+        CompletableFuture<Void> get = CompletableFuture
+                .supplyAsync(this::getRequest)
+                .handle((p, ex) -> {
+                    if (ex != null) {
+                        System.err.println(ex);
+                    } else {
+                        System.out.println(p);
+                    }
+                    return null;
+                });
 
-        futures.add(service.submit(this::postRequest));
-        futures.add(service.submit(this::getRequest));
-        futures.add(service.submit(this::putRequest));
+        CompletableFuture<Void> put = CompletableFuture
+                .supplyAsync(this::putRequest)
+                .handle((p, ex) -> {
+                    if (ex != null) {
+                        System.err.println(ex);
+                    } else {
+                        System.out.println(p);
+                    }
+                    return null;
+                });
 
-        service.shutdown();
-
-        for (Future<?> future : futures) {
-            try {
-                future.get();
-            } catch (Exception ex) {
-                System.err.println(ex);
-            }
-        }
+        CompletableFuture.allOf(post, get, put).get();
 
         //checkFileUpload();
         //checkTrottling();
